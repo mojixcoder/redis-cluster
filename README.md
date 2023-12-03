@@ -1,7 +1,7 @@
 
 ## Redis Cluster Kubernetes Helm Charts
 
-This repository contains Redis cluster helm charts that can survive pod restarts in which the pod IPs get changed afterwards, the cluster will be recovered successfully.
+This repository contains a Redis cluster helm charts that can survive pod restarts in which the pod IPs get changed afterwards, the cluster will be recovered successfully.
 
 ![Redis-Cluster](https://s3.us-east-2.amazonaws.com/assets-university.redislabs.com/ru301/4.4/image1.png)
 
@@ -30,7 +30,7 @@ This repository contains Redis cluster helm charts that can survive pod restarts
 `persistence.storageClassName`| Storage class name of PVC | `ceph-rdb`
 `extraConfig`| Passing extra key-value configs to redis.conf | `{}`
 
-Please see the [values.yaml](https://github.com/mojixcoder/redis-cluster/blob/main/values.yaml) see how these parameters are used.
+Please see the [values.yaml](https://github.com/mojixcoder/redis-cluster/blob/main/values.yaml) to see how the parameters are used.
 
 ### Deploy
 
