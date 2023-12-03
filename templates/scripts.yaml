@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "redis-cluster.name" . }}-scripts
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{ include "redis-cluster.labels" . | nindent 4 }}
+data:
+  init-cluster.sh: |
+    #!/bin/bash
+
+    redis-cli --cluster create --cluster-yes {{ include "redis-cluster.getHostPorts" . }} --cluster-replicas {{ .Values.cluster.replicas }}
+
+  run.sh: |
+    #!/bin/bash
+
+    HOSTNAME=$(eval "hostname")
+    redis-server /etc/redis/redis.conf --cluster-announce-hostname ${HOSTNAME}.{{ include "redis-cluster.name" . }}-headless.{{ .Release.Namespace }}.svc.cluster.local
+  
+  fix-ips.sh: |
+    #!/bin/bash
+    
+    CLUSTER_CONFIG="/data/redis/nodes.conf"
+    
+    if [ -f ${CLUSTER_CONFIG} ]; then
+      OLD_IP=$(eval "cat ${CLUSTER_CONFIG} | grep 'myself' | cut -d' ' -f2 | cut -d'@' -f1 | cut -d':' -f1")
+    
+      if [ "${OLD_IP}" == "${POD_IP}" ]; then
+        echo "IPs match."
+      elif [ "${OLD_IP}" == "" ]; then
+        echo "OLD_IP is empty, make sure the cluster is initialized."
+      elif [ "${POD_IP}" == "" ]; then
+        echo "NEW_IP is empty."
+        exit 1
+      else
+        echo "IPs don't match. OLD_IP=${OLD_IP}, NEW_IP=${POD_IP}."
+        sed -i.bak -e "/myself/ s/[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}/${POD_IP}/" ${CLUSTER_CONFIG}
+        echo "Node IP was updated successfully, new nodes.conf:"
+        cat ${CLUSTER_CONFIG} | grep "myself"
+      fi
+    else
+      echo "${CLUSTER_CONFIG} doesn't exist, no need to update IPs."
+    fi
+  
+  ping.sh: |
+    #!/bin/sh
+
+    REDIS_ADDRS="{{ include "redis-cluster.getRedisAddrs" . }}"
+
+    for addr in ${REDIS_ADDRS}; do
+      echo "PINGING ${addr}"
+      wait4x redis ${addr} --timeout 600s --connection-timeout 600s --interval 5s 
+      echo "PONG!"
+      echo ""
+    done
+
+    echo "All Redises are ready!"

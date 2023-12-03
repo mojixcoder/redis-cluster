@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "redis-cluster.name" . }}-headless
+spec:
+  clusterIP: None
+  selector: {{ include "redis-cluster.labels" . | nindent 4 }}
+  ports:
+    - name: redis
+      protocol: TCP
+      port: {{ .Values.redis.port }}
+      targetPort: redis
+    - name: cluster-bus
+      protocol: TCP
+      port: {{ .Values.redis.bus }}
+      targetPort: bus

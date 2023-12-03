@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "redis-cluster.name" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{ include "redis-cluster.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels: {{ include "redis-cluster.labels" . | nindent 6 }}
+  serviceName: {{ include "redis-cluster.name" . }}-headless
+  replicas: {{ include "redis-cluster.replicaCount" . }}
+  template:
+    metadata:
+      labels: {{ include "redis-cluster.labels" . | nindent 8 }}
+    spec:
+      initContainers:
+        - name: fix-outdated-ips
+          image: ubuntu:24.04
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          command:
+            - /bin/bash
+            - /scripts/fix-ips.sh
+          volumeMounts:
+            - name: data
+              mountPath: /data/redis
+            - name: scripts
+              mountPath: /scripts
+      containers:
+        - name: redis
+          image: {{ .Values.redis.image }}
+          {{- with .Values.redis.resources }}
+          resources: {{ toYaml . | nindent 12 }}
+          {{- end}}
+          ports:
+            - name: redis
+              containerPort: {{ .Values.redis.port }}
+            - name: bus
+              containerPort: {{ .Values.redis.bus }}
+          command: 
+            - /bin/bash
+            - /scripts/run.sh
+          volumeMounts:
+            - name: data
+              mountPath: /data/redis
+            - name: config
+              mountPath: /etc/redis
+            - name: scripts
+              mountPath: /scripts
+        {{- with .Values.metrics }}
+        {{- if .enabled }}
+        - name: metrics
+          image: {{ .image }}
+          {{- with .resources }}
+          resources: {{ toYaml . | nindent 12 }}
+          {{- end}}
+          ports:
+            - name: metrics
+              containerPort: 9121
+          {{- if .command }}
+          command: {{ toYaml .command | nindent 12 }}
+          {{- else }}
+          command: 
+            - /redis_exporter
+          {{- end }}
+          {{- if .args }}
+          args: {{ toYaml .args | nindent 12 }}
+          {{- end }}
+          env:
+            - name: REDIS_ADDR
+              value: "redis://127.0.0.1:{{ $.Values.redis.port }}"
+        {{- end}}
+        {{- end}}
+      volumes: 
+        - name: config
+          configMap: 
+            name: {{ include "redis-cluster.name" . }}-config-map
+        - name: scripts
+          configMap:
+            name: {{ include "redis-cluster.name" . }}-scripts
+  volumeClaimTemplates:
+    - metadata: 
+        name: data
+        labels: {{ include "redis-cluster.labels" . | nindent 10 }}
+      spec:
+        {{- with .Values.persistence.storageClassName }}
+        storageClassName: {{ . | quote }}
+        {{- end }}
+        accessModes:
+        {{- range .Values.persistence.accessModes }}
+          - {{ . | quote }}
+        {{- end }}
+        resources:
+          requests:  
+            storage: {{ .Values.persistence.storage | quote }}

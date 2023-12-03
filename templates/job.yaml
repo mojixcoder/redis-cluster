@@ -1,0 +1,34 @@
+{{- if .Values.cluster.init }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "redis-cluster.name" . }}-job
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{ include "redis-cluster.labels" . | nindent 4 }}
+spec:
+  template:
+    spec:
+      restartPolicy: "OnFailure"
+      initContainers:
+        - name: ping-redises
+          image: atkrad/wait4x:2.13.0
+          command:
+            - /bin/sh
+            - /scripts/ping.sh
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+      containers:
+        - name: init-cluster
+          image: {{ .Values.redis.image }}
+          command:
+            - /bin/bash
+            - /scripts/init-cluster.sh
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+      volumes: 
+        - name: scripts
+          configMap:
+            name: {{ include "redis-cluster.name" . }}-scripts
+{{- end }}

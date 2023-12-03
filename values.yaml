@@ -1,0 +1,33 @@
+nameOverride: test-redis-cluster
+fullnameOverride: test-redis-cluster
+
+redis:
+  image: redis:7.2.3
+  port: 6379
+  bus: 16379
+
+cluster:
+  init: true
+  master: 3
+  replicas: 1
+
+metrics:
+  enabled: true
+  image: oliver006/redis_exporter:v1.55.0
+  serviceMonitor:
+    enabled: true
+    interval: "30s"
+
+service:
+  enabled: true
+  type: ClusterIP
+
+persistence:
+  storage: 10Mi
+  accessModes:
+    - ReadWriteOnce
+
+extraConfig:
+  save: ""
+  appendonly: "yes"
+  cluster-node-timeout: 5000

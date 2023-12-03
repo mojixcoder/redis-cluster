@@ -1,0 +1,17 @@
+{{- if and .Values.metrics.enabled .Values.metrics.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "redis-cluster.name" . }}-service-monitor
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{ include "redis-cluster.labels" . | nindent 4 }}
+spec:
+  endpoints:
+    - port: metrics
+      interval: {{ .Values.metrics.serviceMonitor.interval | quote }}
+  selector:
+    matchLabels: {{ include "redis-cluster.labels" . | nindent 6 }}
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+{{- end }}

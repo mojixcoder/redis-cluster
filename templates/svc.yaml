@@ -1,0 +1,23 @@
+{{- if or .Values.service.enabled .Values.metrics.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "redis-cluster.name" . }}
+  labels: {{ include "redis-cluster.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  selector: {{ include "redis-cluster.labels" . | nindent 4 }}
+  ports:
+    {{- if .Values.service.enabled }}
+    - name: redis
+      protocol: TCP
+      port: {{ .Values.redis.port }}
+      targetPort: redis
+    {{- end }}
+    {{- if .Values.metrics.enabled }}
+    - name: metrics
+      protocol: TCP
+      port: 9121
+      targetPort: metrics
+    {{- end }}
+{{- end }}
