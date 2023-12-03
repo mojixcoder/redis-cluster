@@ -1,5 +1,5 @@
-nameOverride: test-redis-cluster
-fullnameOverride: test-redis-cluster
+nameOverride: redis-cluster
+fullnameOverride: redis-cluster
 
 redis:
   image: redis:7.2.3
