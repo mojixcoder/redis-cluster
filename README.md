@@ -1,7 +1,7 @@
 
 ## Redis Cluster Kubernetes Helm Charts
 
-This repository contains a Redis cluster helm charts that can survive pod restarts in which the pod IPs get changed afterwards, the cluster will be recovered successfully.
+This repository contains Redis cluster helm chart that can survive pod restarts in which the pod IPs get changed afterwards, the cluster will be recovered successfully.
 
 ![Redis-Cluster](https://s3.us-east-2.amazonaws.com/assets-university.redislabs.com/ru301/4.4/image1.png)
 
