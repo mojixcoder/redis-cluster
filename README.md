@@ -15,6 +15,7 @@ This repository contains Redis cluster helm charts that can survive pod restarts
 `redis.port` | Redis server port | `6379`
 `redis.bus` | Redis cluster bus port | `16379`
 `redis.resources` | The resources of the redis container | `{}`
+`redis.minReadySeconds` | minimum number of seconds for which a newly created Pod should be running and ready without any of its containers crashing, for it to be considered available | `10`
 `cluster.init` | A boolean to specify whether the cluster should be initialized. (Can be false when cluster is already created and maybe you just want to change the resources of the cluster) | `true`
 `cluster.master` | Number of master nodes | `3`
 `cluster.replicas` | Number of replicas of each master | `1`

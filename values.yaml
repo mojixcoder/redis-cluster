@@ -1,10 +1,11 @@
-nameOverride: redis-cluster
-fullnameOverride: redis-cluster
+nameOverride: ""
+fullnameOverride: ""
 
 redis:
   image: redis:7.2.3
   port: 6379
   bus: 16379
+  minReadySeconds: 0
 
 cluster:
   init: true
