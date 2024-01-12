@@ -16,6 +16,9 @@ spec:
     metadata:
       labels: {{ include "redis-cluster.labels" . | nindent 8 }}
     spec:
+      {{- if and .Values.securityContext .Values.securityContext.enabled }}
+      securityContext: {{ omit .Values.securityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
       initContainers:
         - name: fix-outdated-ips
           image: ubuntu:24.04
@@ -35,6 +38,9 @@ spec:
       containers:
         - name: redis
           image: {{ .Values.redis.image }}
+          {{- if and .Values.redis.securityContext .Values.redis.securityContext.enabled }}
+          securityContext: {{ omit .Values.redis.securityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
           {{- with .Values.redis.resources }}
           resources: {{ toYaml . | nindent 12 }}
           {{- end}}
@@ -57,6 +63,9 @@ spec:
         {{- if .enabled }}
         - name: metrics
           image: {{ .image }}
+          {{- if and .securityContext .securityContext.enabled }}
+          securityContext: {{ omit .securityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
           {{- with .resources }}
           resources: {{ toYaml . | nindent 12 }}
           {{- end}}
