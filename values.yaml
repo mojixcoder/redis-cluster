@@ -2,22 +2,29 @@ nameOverride: ""
 fullnameOverride: ""
 
 redis:
-  image: redis:7.2.3
+  image: redis:7.2.4
   port: 6379
   bus: 16379
   minReadySeconds: 0
+  securityContext:
+    enabled: false
 
 cluster:
   init: true
   master: 3
   replicas: 1
 
+securityContext:
+  enabled: false
+
 metrics:
   enabled: true
-  image: oliver006/redis_exporter:v1.55.0
+  image: oliver006/redis_exporter:v1.56.0
   serviceMonitor:
     enabled: true
     interval: "30s"
+  securityContext:
+    enabled: false
 
 service:
   enabled: true
