@@ -1,0 +1,7 @@
+schema-location:
+  - "default"
+  - "https://github.com/datreeio/CRDs-catalog/raw/main/monitoring.coreos.com/servicemonitor_v1.json"
+output: "pretty"
+verbose: true
+strict: true
+summary: true

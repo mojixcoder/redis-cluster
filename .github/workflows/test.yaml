@@ -1,0 +1,31 @@
+name: Test
+
+on:
+  push:
+    branches: 
+      - main
+  pull_request:
+    branches: 
+      - main
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4.2.0
+        id: install
+        with:
+          version: v3.14.4
+
+      - name: Setup kubeconform-helm
+        run: helm plugin install https://github.com/jtyr/kubeconform-helm
+
+      - name: Test
+        run: helm kubeconform .
+        
