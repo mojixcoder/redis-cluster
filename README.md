@@ -13,13 +13,14 @@ This repository contains Redis cluster helm charts that can survive pod restarts
 `fullnameOverride` | String to override `redis-cluster.fullname`  `template` | `redis-cluster`
 `securityContext.enabled` | Whether to enable pod's container security context or not | `false`
 `securityContext` | Pod's security context | `{}`
+`minReadySeconds` | minimum number of seconds for which a newly created Pod should be running and ready without any of its containers crashing, for it to be considered available | `10`
+`priorityClassName` | Priority indicates the importance of a Pod relative to other Pods | `high-priority`
 `redis.image` | Redis docker image | `redis:7.2.4`
 `redis.port` | Redis server port | `6379`
 `redis.bus` | Redis cluster bus port | `16379`
 `redis.securityContext.enabled` | Whether to enable the Redis container security context or not | `false`
 `redis.securityContext` | Redis container security context | `{}`
 `redis.resources` | The resources of the redis container | `{}`
-`redis.minReadySeconds` | minimum number of seconds for which a newly created Pod should be running and ready without any of its containers crashing, for it to be considered available | `10`
 `cluster.init` | A boolean to specify whether the cluster should be initialized. (Can be false when cluster is already created and maybe you just want to change the resources of the cluster) | `true`
 `cluster.master` | Number of master nodes | `3`
 `cluster.replicas` | Number of replicas of each master | `1`

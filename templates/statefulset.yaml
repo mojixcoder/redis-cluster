@@ -9,8 +9,8 @@ spec:
     matchLabels: {{ include "redis-cluster.labels" . | nindent 6 }}
   serviceName: {{ include "redis-cluster.name" . }}-headless
   replicas: {{ include "redis-cluster.replicaCount" . }}
-  {{- if .Values.redis.minReadySeconds }}
-  minReadySeconds: {{ .Values.redis.minReadySeconds }}
+  {{- if .Values.minReadySeconds }}
+  minReadySeconds: {{ .Values.minReadySeconds }}
   {{- end }}
   template:
     metadata:
@@ -18,6 +18,9 @@ spec:
     spec:
       {{- if and .Values.securityContext .Values.securityContext.enabled }}
       securityContext: {{ omit .Values.securityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.priorityClassName }}
+      priorityClassName: {{ .Values.priorityClassName }}
       {{- end }}
       initContainers:
         - name: fix-outdated-ips
