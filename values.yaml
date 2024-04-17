@@ -1,11 +1,13 @@
 nameOverride: ""
 fullnameOverride: ""
 
+minReadySeconds: 0
+priorityClassName: ""
+
 redis:
   image: redis:7.2.4
   port: 6379
   bus: 16379
-  minReadySeconds: 0
   securityContext:
     enabled: false
 
