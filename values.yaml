@@ -4,6 +4,10 @@ fullnameOverride: ""
 minReadySeconds: 0
 priorityClassName: ""
 
+serviceAccount:
+  enabled: false
+  name: ""
+
 redis:
   image: redis:7.2.4
   port: 6379

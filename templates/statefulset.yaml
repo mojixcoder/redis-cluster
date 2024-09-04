@@ -16,6 +16,9 @@ spec:
     metadata:
       labels: {{ include "redis-cluster.labels" . | nindent 8 }}
     spec:
+      {{- if and .Values.serviceAccount .Values.serviceAccount.enabled }}
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      {{- end }}
       {{- if and .Values.securityContext .Values.securityContext.enabled }}
       securityContext: {{ omit .Values.securityContext "enabled" | toYaml | nindent 8 }}
       {{- end }}
