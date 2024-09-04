@@ -16,7 +16,7 @@ This repository contains Redis cluster helm charts that can survive pod restarts
 `minReadySeconds` | minimum number of seconds for which a newly created Pod should be running and ready without any of its containers crashing, for it to be considered available | `10`
 `priorityClassName` | Priority indicates the importance of a Pod relative to other Pods | `high-priority`
 `serviceAccount.enabled` | Enable or disable service account | `false`
-`serviceAccount.name` | Name of the service account | `"default"`
+`serviceAccount.name` | Name of the service account | `default`
 `redis.image` | Redis docker image | `redis:7.2.4`
 `redis.port` | Redis server port | `6379`
 `redis.bus` | Redis cluster bus port | `16379`
