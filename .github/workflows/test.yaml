@@ -15,13 +15,13 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Helm
         uses: azure/setup-helm@v4.2.0
         id: install
         with:
-          version: v3.14.4
+          version: v3.15.4
 
       - name: Setup kubeconform-helm
         run: helm plugin install https://github.com/jtyr/kubeconform-helm
