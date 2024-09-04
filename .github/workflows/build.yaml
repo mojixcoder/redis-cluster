@@ -1,0 +1,33 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4.2.0
+        id: install
+        with:
+          version: v3.15.4
+      
+      - name: Login to Docker registry
+        run: helm registry login registry.hub.docker.com -u mojixcoder -p ${{ secrets.DOCKER_REGISTRY_TOKEN }}
+
+      - name: Set release version
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+
+      - name: Building charts
+        run: helm package . --version="${{ env.RELEASE_VERSION }}" --dependency-update
+
+      - name: Push to registry
+        run: helm push redis-cluster-${{ env.RELEASE_VERSION }}.tgz oci://registry.hub.docker.com/mojixcoder
