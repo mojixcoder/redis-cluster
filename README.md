@@ -42,10 +42,15 @@ This repository contains Redis cluster helm charts that can survive pod restarts
 
 Please see the [values.yaml](https://github.com/mojixcoder/redis-cluster/blob/main/values.yaml) to see how the parameters are used.
 
-### Deploy
+### Installation
 
-Clone the repo and `cd` to the repo directory.
+You should add this package as a dependency in `Charts.yaml` file:
 
+```yaml
+dependencies:
+  - name: redis-cluster
+    version: 0.4.0
+    repository: oci://registry.hub.docker.com/mojixcoder
 ```
-helm upgrade -i redis-cluster . -f values.yaml
-```
+
+To learn more about adding dependencies to your Helm charts, please follow this [link](https://helm.sh/docs/helm/helm_dependency/).
