@@ -23,6 +23,7 @@ This repository contains Redis cluster helm charts that can survive pod restarts
 `redis.securityContext.enabled` | Whether to enable the Redis container security context or not | `false`
 `redis.securityContext` | Redis container security context | `{}`
 `redis.resources` | The resources of the redis container | `{}`
+`redis.extraEnvs` | Extra environment variables for the Redis container; supports `value` and `valueFrom` | `[{"name":"REDIS_PASSWORD","value":"secret"}]`
 `cluster.init` | A boolean to specify whether the cluster should be initialized. (Can be false when cluster is already created and maybe you just want to change the resources of the cluster) | `true`
 `cluster.master` | Number of master nodes | `3`
 `cluster.replicas` | Number of replicas of each master | `1`
@@ -31,6 +32,7 @@ This repository contains Redis cluster helm charts that can survive pod restarts
 `metrics.securityContext.enabled` | Whether to enable metrics container security context | `false`
 `metrics.securityContext` | Metric's container security context | `{}`
 `metrics.resources` | Resources of metrics container | `{}`
+`metrics.extraEnvs` | Extra environment variables for the metrics container; supports `value` and `valueFrom` | `[{"name":"REDIS_PASSWORD","value":"secret"}]`
 `metrics.serviceMonitor.enabled` | Create a service monitor if `metrics` is enabled | `true`
 `metrics.serviceMonitor.interval` | Metrics scraping interval | `30s`
 `service.enabled` | Create a service to access the cluster | `true`
