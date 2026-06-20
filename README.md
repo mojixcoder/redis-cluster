@@ -51,7 +51,7 @@ You should add this package as a dependency in `Charts.yaml` file:
 ```yaml
 dependencies:
   - name: redis-cluster
-    version: 0.4.0
+    version: 0.5.0
     repository: oci://registry.hub.docker.com/mojixcoder
 ```
 
