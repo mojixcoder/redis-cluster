@@ -58,6 +58,10 @@ spec:
           command: 
             - /bin/bash
             - /scripts/run.sh
+          {{- if .Values.redis.extraEnvs }}
+          env:
+            {{- include "redis-cluster.extraEnvs" .Values.redis | nindent 12 }}
+          {{- end }}
           volumeMounts:
             - name: data
               mountPath: /data/redis
@@ -90,8 +94,11 @@ spec:
           env:
             - name: REDIS_ADDR
               value: "redis://127.0.0.1:{{ $.Values.redis.port }}"
-        {{- end}}
-        {{- end}}
+            {{- if .extraEnvs }}
+            {{- include "redis-cluster.extraEnvs" . | nindent 12 }}
+            {{- end }}
+        {{- end }}
+        {{- end }}
       volumes: 
         - name: config
           configMap: 

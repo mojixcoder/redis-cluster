@@ -84,6 +84,18 @@ replicaCount = master + master * replica
 {{- $hostPorts }}
 {{- end }}
 
+{{- define "redis-cluster.extraEnvs" -}}
+{{- range $i, $env := .extraEnvs }}
+{{- if $i }}{{ printf "\n" }}{{ end -}}
+- name: {{ $env.name }}
+{{- if hasKey $env "value" }}
+  value: {{ $env.value | quote }}
+{{- else if hasKey $env "valueFrom" }}
+  valueFrom: {{ toYaml $env.valueFrom | nindent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}
+
 {{- define "redis-cluster.getRedisAddrs" -}}
 {{- $hostPorts := "" -}}
 {{- range $i := until (include "redis-cluster.replicaCount" . | int) }}
