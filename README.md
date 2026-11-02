@@ -17,7 +17,7 @@ This repository contains Redis cluster helm charts that can survive pod restarts
 `priorityClassName` | Priority indicates the importance of a Pod relative to other Pods | `high-priority`
 `serviceAccount.enabled` | Enable or disable service account | `false`
 `serviceAccount.name` | Name of the service account | `default`
-`redis.image` | Redis docker image | `redis:8`
+`redis.image` | Redis docker image | `redis:8.10`
 `redis.port` | Redis server port | `6379`
 `redis.bus` | Redis cluster bus port | `16379`
 `redis.securityContext.enabled` | Whether to enable the Redis container security context or not | `false`
@@ -27,7 +27,7 @@ This repository contains Redis cluster helm charts that can survive pod restarts
 `cluster.init` | A boolean to specify whether the cluster should be initialized. (Can be false when cluster is already created and maybe you just want to change the resources of the cluster) | `true`
 `cluster.master` | Number of master nodes | `3`
 `cluster.replicas` | Number of replicas of each master | `1`
-`cluster.waitImage` | Image used by the init job to wait for all Redis nodes before creating the cluster | `atkrad/wait4x:2.13.0`
+`cluster.waitImage` | Image used by the init job to wait for all Redis nodes before creating the cluster | `atkrad/wait4x:3.7.3`
 `auth.enabled` | Require a password for the `default` user. The password is also used for replication (`masterauth`), the cluster init job and the metrics exporter | `false`
 `auth.password` | Password of the `default` user; stored in a chart-managed Secret named `<name>-auth`. Ignored when `auth.existingSecret.name` is set | `""`
 `auth.existingSecret.name` | Name of an existing Secret holding the `default` user password | `""`
@@ -35,7 +35,7 @@ This repository contains Redis cluster helm charts that can survive pod restarts
 `auth.acl.enabled` | Define additional Redis ACL users (requires `auth.enabled`) | `false`
 `auth.acl.users` | List of ACL users. Each entry has `name`, `rules` and either `password` or `existingSecret.name`/`existingSecret.key` | `[]`
 `metrics.enabled` | Turn on/off Redis exporter | `true`
-`metrics.image` | Docker image of Redis exporter | `oliver006/redis_exporter:v1.73.0`
+`metrics.image` | Docker image of Redis exporter | `oliver006/redis_exporter:v1.96.0`
 `metrics.securityContext.enabled` | Whether to enable metrics container security context | `false`
 `metrics.securityContext` | Metric's container security context | `{}`
 `metrics.resources` | Resources of metrics container | `{}`
@@ -101,7 +101,7 @@ You should add this package as a dependency in `Charts.yaml` file:
 ```yaml
 dependencies:
   - name: redis-cluster
-    version: 0.5.1
+    version: 0.6.0
     repository: oci://registry.hub.docker.com/mojixcoder
 ```
 

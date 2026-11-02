@@ -23,7 +23,7 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.initContainers[0].image
-          value: atkrad/wait4x:2.13.0
+          value: atkrad/wait4x:3.7.3
 
   - it: should pass the password to redis-cli and the ping container
     set:

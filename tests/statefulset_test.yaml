@@ -18,10 +18,10 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: redis:8
+          value: redis:8.10
       - equal:
           path: spec.template.spec.containers[1].image
-          value: oliver006/redis_exporter:v1.73.0
+          value: oliver006/redis_exporter:v1.96.0
 
   - it: should inject the default user password into redis and metrics containers
     set:
