@@ -8,22 +8,49 @@ data:
   init-cluster.sh: |
     #!/bin/bash
 
+    # When auth is enabled, redis-cli reads the password from the REDISCLI_AUTH env var.
     redis-cli --cluster create --cluster-yes {{ include "redis-cluster.getHostPorts" . }} --cluster-replicas {{ .Values.cluster.replicas }}
 
   run.sh: |
     #!/bin/bash
 
     HOSTNAME=$(eval "hostname")
-    redis-server /etc/redis/redis.conf --cluster-announce-hostname ${HOSTNAME}.{{ include "redis-cluster.name" . }}-headless.{{ .Release.Namespace }}.svc.cluster.local
-  
+    EXTRA_ARGS=()
+    {{- if .Values.auth.enabled }}
+    {{- if .Values.auth.acl.enabled }}
+
+    # Build the ACL file from the injected passwords. Passwords are stored as SHA-256 hashes,
+    # so the plain text never touches the disk and special characters are safe.
+    ACL_FILE="/data/redis/users.acl"
+    hash_password() {
+      printf '%s' "$1" | sha256sum | cut -d' ' -f1
+    }
+    {
+      echo "user default on #$(hash_password "${REDIS_PASSWORD}") ~* &* +@all"
+      {{- range .Values.auth.acl.users }}
+      echo "user {{ .name }} on #$(hash_password "${{ printf "{%s}" (include "redis-cluster.aclPasswordEnvName" .name) }}") {{ .rules }}"
+      {{- end }}
+    } > "${ACL_FILE}"
+    chmod 600 "${ACL_FILE}"
+
+    # requirepass is ignored when an ACL file is configured; the default user is defined in the file.
+    EXTRA_ARGS+=(--masterauth "${REDIS_PASSWORD}")
+    {{- else }}
+
+    EXTRA_ARGS+=(--requirepass "${REDIS_PASSWORD}" --masterauth "${REDIS_PASSWORD}")
+    {{- end }}
+    {{- end }}
+
+    exec redis-server /etc/redis/redis.conf --cluster-announce-hostname ${HOSTNAME}.{{ include "redis-cluster.name" . }}-headless.{{ .Release.Namespace }}.svc.cluster.local "${EXTRA_ARGS[@]}"
+
   fix-ips.sh: |
     #!/bin/bash
-    
+
     CLUSTER_CONFIG="/data/redis/nodes.conf"
-    
+
     if [ -f ${CLUSTER_CONFIG} ]; then
       OLD_IP=$(eval "cat ${CLUSTER_CONFIG} | grep 'myself' | cut -d' ' -f2 | cut -d'@' -f1 | cut -d':' -f1")
-    
+
       if [ "${OLD_IP}" == "${POD_IP}" ]; then
         echo "IPs match."
       elif [ "${OLD_IP}" == "" ]; then
@@ -40,15 +67,20 @@ data:
     else
       echo "${CLUSTER_CONFIG} doesn't exist, no need to update IPs."
     fi
-  
+
   ping.sh: |
     #!/bin/sh
 
-    REDIS_ADDRS="{{ include "redis-cluster.getRedisAddrs" . }}"
+    REDIS_ADDRS="{{ include "redis-cluster.getHostPorts" . | trim }}"
+
+    REDIS_AUTH=""
+    if [ -n "${REDIS_PASSWORD}" ]; then
+      REDIS_AUTH="default:${REDIS_PASSWORD}@"
+    fi
 
     for addr in ${REDIS_ADDRS}; do
       echo "PINGING ${addr}"
-      wait4x redis ${addr} --timeout 600s --connection-timeout 600s --interval 5s 
+      wait4x redis "redis://${REDIS_AUTH}${addr}" --timeout 600s --connection-timeout 600s --interval 5s
       echo "PONG!"
       echo ""
     done

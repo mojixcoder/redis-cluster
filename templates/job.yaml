@@ -11,10 +11,14 @@ spec:
       restartPolicy: "OnFailure"
       initContainers:
         - name: ping-redises
-          image: atkrad/wait4x:2.13.0
+          image: {{ .Values.cluster.waitImage }}
           command:
             - /bin/sh
             - /scripts/ping.sh
+          {{- if .Values.auth.enabled }}
+          env:
+            {{- include "redis-cluster.passwordEnv" (dict "name" "REDIS_PASSWORD" "root" .) | nindent 12 }}
+          {{- end }}
           volumeMounts:
             - name: scripts
               mountPath: /scripts
@@ -24,6 +28,10 @@ spec:
           command:
             - /bin/bash
             - /scripts/init-cluster.sh
+          {{- if .Values.auth.enabled }}
+          env:
+            {{- include "redis-cluster.passwordEnv" (dict "name" "REDISCLI_AUTH" "root" .) | nindent 12 }}
+          {{- end }}
           volumeMounts:
             - name: scripts
               mountPath: /scripts

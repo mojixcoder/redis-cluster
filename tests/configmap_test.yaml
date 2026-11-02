@@ -1,0 +1,46 @@
+suite: redis config
+templates:
+  - configmap.yaml
+tests:
+  - it: should not configure an ACL file by default
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - notMatchRegex:
+          path: data["redis.conf"]
+          pattern: aclfile
+      - notMatchRegex:
+          path: data["redis.conf"]
+          pattern: requirepass
+
+  - it: should not configure an ACL file when auth is enabled without ACL
+    set:
+      auth:
+        enabled: true
+        password: placeholder-password
+    asserts:
+      - notMatchRegex:
+          path: data["redis.conf"]
+          pattern: aclfile
+      - notMatchRegex:
+          path: data["redis.conf"]
+          pattern: placeholder-password
+
+  - it: should configure the ACL file when ACL is enabled
+    set:
+      auth:
+        enabled: true
+        password: placeholder-password
+        acl:
+          enabled: true
+          users:
+            - name: app
+              rules: "~* &* +@all"
+              password: app-placeholder
+    asserts:
+      - matchRegex:
+          path: data["redis.conf"]
+          pattern: "(?m)^aclfile /data/redis/users.acl$"
+      - notMatchRegex:
+          path: data["redis.conf"]
+          pattern: placeholder

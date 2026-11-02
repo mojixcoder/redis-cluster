@@ -1,0 +1,63 @@
+suite: init job auth wiring
+templates:
+  - job.yaml
+tests:
+  - it: should not render the job when cluster.init is false
+    set:
+      cluster:
+        init: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should not add auth env vars when auth is disabled
+    asserts:
+      - isKind:
+          of: Job
+      - notExists:
+          path: spec.template.spec.initContainers[0].env
+      - notExists:
+          path: spec.template.spec.containers[0].env
+
+  - it: should use the configurable wait image
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: atkrad/wait4x:2.13.0
+
+  - it: should pass the password to redis-cli and the ping container
+    set:
+      auth:
+        enabled: true
+        password: placeholder-password
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env
+          value:
+            - name: REDISCLI_AUTH
+              valueFrom:
+                secretKeyRef:
+                  name: redis-cluster-auth
+                  key: redis-password
+      - equal:
+          path: spec.template.spec.initContainers[0].env
+          value:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-cluster-auth
+                  key: redis-password
+
+  - it: should reference an existing secret
+    set:
+      auth:
+        enabled: true
+        existingSecret:
+          name: my-redis-secret
+          key: my-key
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[0].valueFrom.secretKeyRef
+          value:
+            name: my-redis-secret
+            key: my-key

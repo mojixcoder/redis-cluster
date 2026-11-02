@@ -12,6 +12,9 @@ data:
     port {{ .Values.redis.port }}
     cluster-port {{ .Values.redis.bus }}
     cluster-preferred-endpoint-type hostname
+    {{- if and .Values.auth.enabled .Values.auth.acl.enabled }}
+    aclfile /data/redis/users.acl
+    {{- end }}
     {{- range $key, $value := $.Values.extraConfig }}
-    {{- include "redis-cluster.addToConfig" (dict "key" $key "value" $value) | indent 4 }}
+    {{- include "redis-cluster.addToConfig" (dict "key" $key "value" $value) | trim | nindent 4 }}
     {{- end }}

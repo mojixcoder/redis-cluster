@@ -1,0 +1,87 @@
+suite: scripts configmap
+templates:
+  - scripts.yaml
+tests:
+  - it: should start redis without auth flags when auth is disabled
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["run.sh"]
+          pattern: exec redis-server /etc/redis/redis.conf --cluster-announce-hostname
+      - notMatchRegex:
+          path: data["run.sh"]
+          pattern: requirepass
+      - notMatchRegex:
+          path: data["run.sh"]
+          pattern: masterauth
+      - notMatchRegex:
+          path: data["run.sh"]
+          pattern: users.acl
+      - matchRegex:
+          path: data["ping.sh"]
+          pattern: REDIS_AUTH="default:\$\{REDIS_PASSWORD\}@"
+      - matchRegex:
+          path: data["ping.sh"]
+          pattern: wait4x redis "redis://\$\{REDIS_AUTH\}\$\{addr\}"
+      - matchRegex:
+          path: data["ping.sh"]
+          pattern: redis-cluster-0.redis-cluster-headless.NAMESPACE.svc.cluster.local:6379
+      - notMatchRegex:
+          path: data["ping.sh"]
+          pattern: redis://redis-cluster-0
+
+  - it: should pass requirepass and masterauth when auth is enabled without ACL
+    set:
+      auth:
+        enabled: true
+        password: placeholder-password
+    asserts:
+      - matchRegex:
+          path: data["run.sh"]
+          pattern: --requirepass "\$\{REDIS_PASSWORD\}" --masterauth "\$\{REDIS_PASSWORD\}"
+      - notMatchRegex:
+          path: data["run.sh"]
+          pattern: users.acl
+      - notMatchRegex:
+          path: data["run.sh"]
+          pattern: placeholder-password
+
+  - it: should write an ACL file with hashed passwords when ACL is enabled
+    set:
+      auth:
+        enabled: true
+        password: placeholder-password
+        acl:
+          enabled: true
+          users:
+            - name: app-user
+              rules: "~app:* &* +@all -@dangerous"
+              password: app-placeholder
+            - name: reader
+              rules: "~* +@read"
+              existingSecret:
+                name: reader-secret
+                key: pw
+    asserts:
+      - matchRegex:
+          path: data["run.sh"]
+          pattern: ACL_FILE="/data/redis/users.acl"
+      - matchRegex:
+          path: data["run.sh"]
+          pattern: user default on #\$\(hash_password "\$\{REDIS_PASSWORD\}"\) ~\* &\* \+@all
+      - matchRegex:
+          path: data["run.sh"]
+          pattern: user app-user on #\$\(hash_password "\$\{REDIS_ACL_PASSWORD_APP_USER\}"\) ~app:\* &\* \+@all -@dangerous
+      - matchRegex:
+          path: data["run.sh"]
+          pattern: user reader on #\$\(hash_password "\$\{REDIS_ACL_PASSWORD_READER\}"\) ~\* \+@read
+      - matchRegex:
+          path: data["run.sh"]
+          pattern: --masterauth "\$\{REDIS_PASSWORD\}"
+      - notMatchRegex:
+          path: data["run.sh"]
+          pattern: --requirepass
+      - notMatchRegex:
+          path: data["run.sh"]
+          pattern: placeholder
