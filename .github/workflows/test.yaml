@@ -15,17 +15,27 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Helm
-        uses: azure/setup-helm@v4.2.0
+        uses: azure/setup-helm@v5.0.1
         id: install
         with:
-          version: v3.15.4
+          version: v4.3.1
+
+      - name: Setup helm-unittest
+        run: helm plugin install https://github.com/helm-unittest/helm-unittest.git --verify=false
 
       - name: Setup kubeconform-helm
-        run: helm plugin install https://github.com/jtyr/kubeconform-helm
+        run: |
+          pip install pyyaml
+          helm plugin install https://github.com/jtyr/kubeconform-helm --verify=false
 
-      - name: Test
+      - name: Lint
+        run: helm lint .
+
+      - name: Unit tests
+        run: helm unittest .
+
+      - name: Schema validation
         run: helm kubeconform .
-        
