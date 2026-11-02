@@ -12,13 +12,13 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Helm
-        uses: azure/setup-helm@v4.2.0
+        uses: azure/setup-helm@v5.0.1
         id: install
         with:
-          version: v3.15.4
+          version: v4.3.1
       
       - name: Login to Docker registry
         run: helm registry login registry.hub.docker.com -u mojixcoder -p ${{ secrets.DOCKER_REGISTRY_TOKEN }}

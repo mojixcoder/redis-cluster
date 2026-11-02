@@ -1,0 +1,181 @@
+suite: statefulset auth wiring
+templates:
+  - statefulset.yaml
+tests:
+  - it: should not add auth env vars when auth is disabled
+    asserts:
+      - isKind:
+          of: StatefulSet
+      - notExists:
+          path: spec.template.spec.containers[0].env
+      - equal:
+          path: spec.template.spec.containers[1].env
+          value:
+            - name: REDIS_ADDR
+              value: "redis://127.0.0.1:6379"
+
+  - it: should use bumped default images
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: redis:8.10
+      - equal:
+          path: spec.template.spec.containers[1].image
+          value: oliver006/redis_exporter:v1.96.0
+
+  - it: should inject the default user password into redis and metrics containers
+    set:
+      auth:
+        enabled: true
+        password: placeholder-password
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REDIS_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: redis-cluster-auth
+                key: redis-password
+      - lengthEqual:
+          path: spec.template.spec.containers[0].env
+          count: 1
+      - contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: REDIS_ADDR
+            value: "redis://127.0.0.1:6379"
+      - contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: REDIS_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: redis-cluster-auth
+                key: redis-password
+      - lengthEqual:
+          path: spec.template.spec.containers[1].env
+          count: 2
+
+  - it: should reference an existing secret for the default user password
+    set:
+      auth:
+        enabled: true
+        existingSecret:
+          name: my-redis-secret
+          key: my-key
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REDIS_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: my-redis-secret
+                key: my-key
+      - contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: REDIS_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: my-redis-secret
+                key: my-key
+
+  - it: should keep extra envs alongside auth envs
+    set:
+      auth:
+        enabled: true
+        password: placeholder-password
+      redis:
+        extraEnvs:
+          - name: FOO
+            value: bar
+      metrics:
+        extraEnvs:
+          - name: BAZ
+            valueFrom:
+              configMapKeyRef:
+                name: cm
+                key: k
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REDIS_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: redis-cluster-auth
+                key: redis-password
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: FOO
+            value: "bar"
+      - lengthEqual:
+          path: spec.template.spec.containers[0].env
+          count: 2
+      - contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: BAZ
+            valueFrom:
+              configMapKeyRef:
+                name: cm
+                key: k
+      - lengthEqual:
+          path: spec.template.spec.containers[1].env
+          count: 3
+
+  - it: should inject one env var per ACL user into the redis container only
+    set:
+      auth:
+        enabled: true
+        password: placeholder-password
+        acl:
+          enabled: true
+          users:
+            - name: app-user
+              rules: "~app:* &* +@all"
+              password: app-placeholder
+            - name: reader
+              rules: "~* +@read"
+              existingSecret:
+                name: reader-secret
+                key: pw
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REDIS_ACL_PASSWORD_APP_USER
+            valueFrom:
+              secretKeyRef:
+                name: redis-cluster-auth
+                key: acl-app-user-password
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REDIS_ACL_PASSWORD_READER
+            valueFrom:
+              secretKeyRef:
+                name: reader-secret
+                key: pw
+      - lengthEqual:
+          path: spec.template.spec.containers[0].env
+          count: 3
+      - lengthEqual:
+          path: spec.template.spec.containers[1].env
+          count: 2
+
+  - it: should still render the redis container env when only extra envs are set
+    set:
+      redis:
+        extraEnvs:
+          - name: FOO
+            value: bar
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env
+          value:
+            - name: FOO
+              value: "bar"

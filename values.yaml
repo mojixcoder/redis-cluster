@@ -9,7 +9,7 @@ serviceAccount:
   name: ""
 
 redis:
-  image: redis:8
+  image: redis:8.10
   port: 6379
   bus: 16379
   securityContext:
@@ -19,13 +19,39 @@ cluster:
   init: true
   master: 3
   replicas: 1
+  # Image used by the init job to wait for all Redis nodes before creating the cluster.
+  waitImage: atkrad/wait4x:3.7.3
+
+# Authentication for the Redis cluster.
+# When enabled, the "default" user gets a password that is used by replicas (masterauth),
+# the cluster init job (redis-cli) and the metrics exporter.
+auth:
+  enabled: false
+  # Password of the "default" user. The chart stores it in a Secret named "<name>-auth".
+  # Ignored when existingSecret.name is set.
+  password: ""
+  # Reference an existing Secret instead of auth.password.
+  existingSecret:
+    name: ""
+    key: "redis-password"
+  # Redis ACL users. Requires auth.enabled. Passwords are never written to ConfigMaps;
+  # they are injected as env vars and hashed into an ACL file at container start.
+  acl:
+    enabled: false
+    users: []
+    # - name: app
+    #   rules: "~app:* &* +@all -@dangerous"
+    #   password: ""
+    #   existingSecret:
+    #     name: ""
+    #     key: ""
 
 securityContext:
   enabled: false
 
 metrics:
   enabled: true
-  image: oliver006/redis_exporter:v1.73.0
+  image: oliver006/redis_exporter:v1.96.0
   serviceMonitor:
     enabled: true
     interval: "30s"

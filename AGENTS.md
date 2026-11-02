@@ -10,9 +10,10 @@ This repository contains a Helm 3 application chart for a Redis cluster. Chart m
 - `helm template redis-cluster .` renders all manifests locally for inspection.
 - `helm template redis-cluster . -f custom-values.yaml` tests a specific configuration.
 - `helm kubeconform .` runs the same Kubernetes schema validation used by CI; install the `jtyr/kubeconform-helm` plugin first.
+- `helm unittest .` runs the rendered-manifest unit tests in `tests/*_test.yaml`; install the `helm-unittest/helm-unittest` plugin first.
 - `helm package . --dependency-update` creates a distributable chart archive.
 
-Before submitting changes, run both `helm lint .` and `helm kubeconform .`. Render targeted values whenever a feature adds conditional YAML.
+Before submitting changes, run `helm lint .`, `helm unittest .` and `helm kubeconform .`. Render targeted values whenever a feature adds conditional YAML.
 
 ## Coding Style & Naming Conventions
 
@@ -20,7 +21,7 @@ Use two-space indentation in YAML and preserve correct nesting after Helm direct
 
 ## Testing Guidelines
 
-There is no standalone unit-test suite. Tests are rendered-manifest and schema checks. Cover both enabled and disabled branches, empty lists, multiple list entries, and nested objects such as `valueFrom`. Never commit credentials in test values; use placeholders.
+Unit tests live in `tests/*_test.yaml` and run with `helm unittest .`; they assert on rendered manifests. Schema checks run with `helm kubeconform .`. Add or extend a test suite whenever a template changes. Cover both enabled and disabled branches, empty lists, multiple list entries, and nested objects such as `valueFrom`. Never commit credentials in test values; use placeholders.
 
 ## Commit & Pull Request Guidelines
 

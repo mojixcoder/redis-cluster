@@ -1,3 +1,4 @@
+{{- include "redis-cluster.validateAuth" . -}}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -58,9 +59,17 @@ spec:
           command: 
             - /bin/bash
             - /scripts/run.sh
-          {{- if .Values.redis.extraEnvs }}
+          {{- if or .Values.auth.enabled .Values.redis.extraEnvs }}
           env:
+            {{- if .Values.auth.enabled }}
+            {{- include "redis-cluster.passwordEnv" (dict "name" "REDIS_PASSWORD" "root" .) | nindent 12 }}
+            {{- if .Values.auth.acl.enabled }}
+            {{- include "redis-cluster.aclPasswordEnvs" . | trim | nindent 12 }}
+            {{- end }}
+            {{- end }}
+            {{- if .Values.redis.extraEnvs }}
             {{- include "redis-cluster.extraEnvs" .Values.redis | nindent 12 }}
+            {{- end }}
           {{- end }}
           volumeMounts:
             - name: data
@@ -94,6 +103,9 @@ spec:
           env:
             - name: REDIS_ADDR
               value: "redis://127.0.0.1:{{ $.Values.redis.port }}"
+            {{- if $.Values.auth.enabled }}
+            {{- include "redis-cluster.passwordEnv" (dict "name" "REDIS_PASSWORD" "root" $) | nindent 12 }}
+            {{- end }}
             {{- if .extraEnvs }}
             {{- include "redis-cluster.extraEnvs" . | nindent 12 }}
             {{- end }}
@@ -107,7 +119,7 @@ spec:
           configMap:
             name: {{ include "redis-cluster.name" . }}-scripts
   volumeClaimTemplates:
-    - apiVersion: v1	
+    - apiVersion: v1
       kind: PersistentVolumeClaim
       metadata: 
         name: data
