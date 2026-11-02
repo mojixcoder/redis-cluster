@@ -53,7 +53,18 @@ Please see the [values.yaml](https://github.com/mojixcoder/redis-cluster/blob/ma
 
 ### Authentication and ACL
 
-Set `auth.enabled: true` to protect the cluster with a password. The `default` user gets the password, replicas use it to authenticate against their masters, the init job passes it to `redis-cli` through `REDISCLI_AUTH`, and the metrics exporter receives it as `REDIS_PASSWORD`. When enabling auth on an already initialized cluster, set `cluster.init: false` (the init Job is immutable and cannot be upgraded) and let the StatefulSet roll; replication converges once every node has restarted with the password.
+Authentication is fully managed by the chart. Set `auth.enabled: true`, provide a password, and everything that talks to Redis is configured for you:
+
+| Component | What the chart does |
+|--|--|
+| `redis-server` | Starts with `requirepass` and `masterauth` (or `aclfile` + `masterauth` in ACL mode), so clients must authenticate and replicas can sync from their masters |
+| Cluster init job | `redis-cli --cluster create` authenticates through the `REDISCLI_AUTH` env var; the wait4x readiness check uses the password in its connection URL |
+| Metrics exporter | Receives `REDIS_PASSWORD`, which `redis_exporter` reads natively |
+| Secrets | Inline passwords go into a chart-managed Secret; existing Secrets are referenced with `secretKeyRef`. No password is ever written to a ConfigMap |
+
+Do not add `requirepass`, `masterauth`, `masteruser`, `aclfile` or `user` to `extraConfig`; the chart rejects them at render time because they would conflict with the generated configuration (for example Redis ignores `requirepass` when an ACL file is configured). Use the `auth` values instead.
+
+When enabling auth on an already initialized cluster, set `cluster.init: false` (the init Job is immutable and cannot be upgraded) and let the StatefulSet roll; replication converges once every node has restarted with the password.
 
 ```yaml
 auth:

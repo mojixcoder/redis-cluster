@@ -44,3 +44,58 @@ tests:
       - notMatchRegex:
           path: data["redis.conf"]
           pattern: placeholder
+
+  - it: should reject requirepass in extraConfig
+    set:
+      extraConfig:
+        requirepass: placeholder
+    asserts:
+      - failedTemplate:
+          errorPattern: extraConfig.requirepass is managed by the chart
+
+  - it: should reject masterauth in extraConfig even when auth is enabled
+    set:
+      auth:
+        enabled: true
+        password: placeholder-password
+      extraConfig:
+        masterauth: placeholder
+    asserts:
+      - failedTemplate:
+          errorPattern: extraConfig.masterauth is managed by the chart
+
+  - it: should reject masteruser in extraConfig
+    set:
+      extraConfig:
+        masteruser: someone
+    asserts:
+      - failedTemplate:
+          errorPattern: extraConfig.masteruser is managed by the chart
+
+  - it: should reject aclfile in extraConfig
+    set:
+      extraConfig:
+        aclfile: /etc/redis/users.acl
+    asserts:
+      - failedTemplate:
+          errorPattern: extraConfig.aclfile is managed by the chart
+
+  - it: should reject user directives in extraConfig
+    set:
+      extraConfig:
+        user: "app on >placeholder ~* +@all"
+    asserts:
+      - failedTemplate:
+          errorPattern: extraConfig.user is managed by the chart
+
+  - it: should still accept unrelated extraConfig keys
+    set:
+      auth:
+        enabled: true
+        password: placeholder-password
+      extraConfig:
+        maxmemory: 100mb
+    asserts:
+      - matchRegex:
+          path: data["redis.conf"]
+          pattern: "(?m)^maxmemory 100mb$"

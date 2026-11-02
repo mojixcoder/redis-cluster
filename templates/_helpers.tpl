@@ -100,6 +100,11 @@ replicaCount = master + master * replica
 Validate the auth / ACL values. Renders nothing; fails the release on invalid input.
 */}}
 {{- define "redis-cluster.validateAuth" -}}
+{{- range $key := list "requirepass" "masterauth" "masteruser" "aclfile" "user" }}
+{{- if hasKey $.Values.extraConfig $key }}
+{{- fail (printf "extraConfig.%s is managed by the chart. Enable authentication with auth.enabled and configure passwords/users through the auth values instead" $key) }}
+{{- end }}
+{{- end }}
 {{- if .Values.auth.enabled }}
 {{- if and (not .Values.auth.password) (not .Values.auth.existingSecret.name) }}
 {{- fail "auth.enabled is true but neither auth.password nor auth.existingSecret.name is set" }}
